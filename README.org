@@ -1,0 +1,2 @@
+* DDPG
+Use ddpg algorithm to solve continous action space PuckWorld environment.
