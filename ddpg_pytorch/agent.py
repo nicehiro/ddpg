@@ -7,7 +7,7 @@ import torch
 from torch import nn
 from torch.optim import Adam
 
-from memory import ReplayBuffer
+from ddpg_pytorch.memory import ReplayBuffer
 
 
 class Actor(nn.Module):

@@ -1,5 +1,5 @@
 from puck_world.envs.single_agent.puckworld_continuous import PuckWorld
-from agent import Trainer as DDPGAgent
+from ddpg_pytorch.agent import Trainer as DDPGAgent
 
 if __name__ == '__main__':
     env = PuckWorld()

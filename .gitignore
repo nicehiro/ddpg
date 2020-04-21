@@ -1,3 +1,9 @@
 venv/
 __pycache__/
 .idea/
+.vscode/
+ddpg_pytorch_HIRO.egg-info/
+multi-ddpg/
+ddpg_pytorch/hunter_ddpg_wrapper.py
+multi_ddpg_wrapper.py
+train_multi.py
