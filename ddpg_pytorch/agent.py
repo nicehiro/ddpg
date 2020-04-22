@@ -21,6 +21,7 @@ class Actor(nn.Module):
         self.nets = [self.fc1, self.fc2, self.fc3, self.fc4, self.fc5]
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
+        self.init_weight()
 
     def forward(self, x):
         # x = utils.feature_normalize(x)
@@ -30,6 +31,12 @@ class Actor(nn.Module):
         x = self.relu(self.fc4(x))
         x = math.pi * self.tanh(self.fc5(x))
         return x
+
+    def init_weight(self):
+        for layer in self.layers:
+            nn.init.kaiming_normal_(layer.weight, mode='fan_in')
+            # nn.init.xavier_uniform_(layer.weight)
+            layer.bias.data.fill_(0.0001)
 
 
 class Critic(nn.Module):
