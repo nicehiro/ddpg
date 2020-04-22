@@ -19,7 +19,7 @@ class Actor(nn.Module):
         self.fc4 = nn.Linear(unit_nums, unit_nums)
         self.fc5 = nn.Linear(unit_nums, actions_n)
         self.layers = [self.fc1, self.fc2, self.fc3, self.fc4, self.fc5]
-        self.relu = nn.ReLU()
+        self.relu = nn.LeakyReLU()
         self.tanh = nn.Tanh()
         self.init_weight()
 
@@ -36,7 +36,7 @@ class Actor(nn.Module):
         for layer in self.layers:
             nn.init.kaiming_normal_(layer.weight, mode='fan_in')
             # nn.init.xavier_uniform_(layer.weight)
-            layer.bias.data.fill_(0.0001)
+            layer.bias.data.fill_(0.01)
 
 
 class Critic(nn.Module):
