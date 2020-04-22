@@ -18,7 +18,7 @@ class Actor(nn.Module):
         self.fc3 = nn.Linear(unit_nums, unit_nums)
         self.fc4 = nn.Linear(unit_nums, unit_nums)
         self.fc5 = nn.Linear(unit_nums, actions_n)
-        self.nets = [self.fc1, self.fc2, self.fc3, self.fc4, self.fc5]
+        self.layers = [self.fc1, self.fc2, self.fc3, self.fc4, self.fc5]
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
         self.init_weight()
@@ -29,7 +29,7 @@ class Actor(nn.Module):
         x = self.relu(self.fc2(x))
         x = self.relu(self.fc3(x))
         x = self.relu(self.fc4(x))
-        x = math.pi * self.tanh(self.fc5(x))
+        x = self.tanh(self.fc5(x))
         return x
 
     def init_weight(self):
@@ -156,15 +156,12 @@ class Trainer():
 
     def act(self, s):
         self.steps += 1
-        if not self.is_trainning or self.steps > self.train_threshold:
-            action = self.actor(torch.tensor(s, dtype=torch.float).unsqueeze(0))
-            action = action.data.numpy()[0]
-            sign = random.random()
-            action += self.is_trainning * self.act_noise * (1 if sign > 0.5 else -1) *\
-                      np.random.randn(self.actions_n)
-            action = np.clip(action, self.action_low, self.action_high)
-        else:
-            action = self.action_space.sample()
+        action = self.actor(torch.tensor(s, dtype=torch.float).unsqueeze(0))
+        action = action.data.numpy()[0]
+        sign = random.random()
+        action += self.is_trainning * self.act_noise * (1 if sign > 0.5 else -1) *\
+                  np.random.randn(self.actions_n)
+        action = np.clip(action, self.action_low, self.action_high)
         print(action)
         return action
 
