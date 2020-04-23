@@ -24,4 +24,4 @@ class ReplayBuffer():
         self.position += 1
 
     def can_sample(self):
-        return self.position > 2 * self.batch_size
+        return self.position > 10 * self.batch_size

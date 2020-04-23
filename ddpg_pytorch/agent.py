@@ -34,7 +34,7 @@ class Actor(nn.Module):
 
     def init_weight(self):
         for layer in self.layers:
-            nn.init.kaiming_normal_(layer.weight, mode='fan_in')
+            nn.init.kaiming_normal_(layer.weight)
             # nn.init.xavier_uniform_(layer.weight)
             layer.bias.data.fill_(0.01)
 
