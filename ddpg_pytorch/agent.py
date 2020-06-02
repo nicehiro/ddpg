@@ -8,6 +8,7 @@ from torch import nn
 from torch.optim import Adam
 
 from ddpg_pytorch.memory import ReplayBuffer
+from utils import writer
 
 
 class Actor(nn.Module):
@@ -115,6 +116,7 @@ class Trainer():
         r = torch.tensor(r, dtype=torch.float).unsqueeze(1)
         d = torch.tensor(d, dtype=torch.float).unsqueeze(1)
         s_ = torch.tensor(s_, dtype=torch.float)
+        writer.add_scalar('Rewards', r.mean(), self.steps)
         with torch.no_grad():
             next_a_target = self.actor_target(s_).type(torch.float)
             td_target = r + self.discount * (1 - d) * \
@@ -137,6 +139,8 @@ class Trainer():
         # reset actor net's params grad = True
         # for p in self.critic.parameters():
         #     p.requires_grad = True
+        writer.add_scalar('Loss/Policy', policy_loss, self.steps)
+        writer.add_scalar('Loss/Critic', value_loss, self.steps)
         # soft update
         self.soft_update(self.actor_target, self.actor)
         self.soft_update(self.critic_target, self.critic)

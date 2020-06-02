@@ -1,5 +1,6 @@
 from puck_world.envs.single_agent.puckworld_continuous import PuckWorld
 from ddpg_pytorch.agent import Trainer as DDPGAgent
+from utils import writer
 
 if __name__ == '__main__':
     env = PuckWorld()
@@ -24,5 +25,5 @@ if __name__ == '__main__':
             agent.optimize()
         print('Episode %i, Steps: %i' % (epi, t))
         if epi % 100 == 0:
-            agent.save_model('ddpg')
+            agent.save_model('ddpg-obs')
 
