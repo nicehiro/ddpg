@@ -9,6 +9,7 @@ from torch.optim import Adam
 
 from ddpg_pytorch.memory import ReplayBuffer
 from utils import writer
+from ddpg_pytorch.utils import feature_normalize
 
 
 class Actor(nn.Module):
@@ -19,8 +20,8 @@ class Actor(nn.Module):
         self.fc3 = nn.Linear(unit_nums, unit_nums)
         self.fc4 = nn.Linear(unit_nums, unit_nums)
         self.fc5 = nn.Linear(unit_nums, actions_n)
-        self.layers = [self.fc1, self.fc2, self.fc3, self.fc4, self.fc5]
-        self.relu = nn.LeakyReLU()
+        self.layers = [self.fc1, self.fc2, self.fc3, self.fc4]
+        self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
         self.init_weight()
 
@@ -29,15 +30,16 @@ class Actor(nn.Module):
         x = self.relu(self.fc1(x))
         x = self.relu(self.fc2(x))
         x = self.relu(self.fc3(x))
-        x = self.relu(self.fc4(x))
+#         x = self.relu(self.fc4(x))
         x = self.tanh(self.fc5(x))
         return x
 
     def init_weight(self):
         for layer in self.layers:
-            nn.init.kaiming_normal_(layer.weight)
-            # nn.init.xavier_uniform_(layer.weight)
-            layer.bias.data.fill_(0.01)
+            nn.init.kaiming_normal_(layer.weight, nonlinearity='relu')
+            layer.bias.data.fill_(0.001)
+        nn.init.xavier_uniform_(self.fc5.weight)
+        self.fc5.bias.data.fill_(0.001)
 
 
 class Critic(nn.Module):
@@ -59,7 +61,7 @@ class Critic(nn.Module):
 class Trainer():
     """DDPG Trainer.
     """
-    def __init__(self, env: gym.Env, actor_lr=1e-4, critic_lr=1e-4,
+    def __init__(self, env: gym.Env, actor_lr=1e-5, critic_lr=1e-4,
                  capacity=int(1e4), batch_size=64, retrain=False,
                  load_dir='ddpg', train_threshold=10000):
         super().__init__()
@@ -93,8 +95,8 @@ class Trainer():
         # replay buffer
         self.replay_buffer = ReplayBuffer(capacity=capacity, batch_size=batch_size)
         # hyper params
-        self.discount = 0.999
-        self.tau = 0.0001
+        self.discount = 0.99
+        self.tau = 0.00001
         self.act_noise = 0.1
         self.is_trainning = True
 
@@ -111,10 +113,14 @@ class Trainer():
             r.append(trans[2])
             d.append(trans[3])
             s_.append(trans[4])
+        s = np.array(s, dtype=np.float32)
+#         s = feature_normalize(s)
         s = torch.tensor(s, dtype=torch.float)
         a = torch.tensor(a, dtype=torch.float)
         r = torch.tensor(r, dtype=torch.float).unsqueeze(1)
         d = torch.tensor(d, dtype=torch.float).unsqueeze(1)
+        s_ = np.array(s_, dtype=np.float32)
+#         s_ = feature_normalize(s_)
         s_ = torch.tensor(s_, dtype=torch.float)
         writer.add_scalar('Rewards', r.mean(), self.steps)
         with torch.no_grad():
@@ -160,14 +166,18 @@ class Trainer():
 
     def act(self, s):
         self.steps += 1
-        action = self.actor(torch.tensor(s, dtype=torch.float).unsqueeze(0))
-        action = action.data.numpy()[0]
-        sign = random.random()
-        action += self.is_trainning * self.act_noise * (1 if sign > 0.5 else -1) *\
-                  np.random.randn(self.actions_n)
-        action = np.clip(action, self.action_low, self.action_high)
-        print(action)
-        return action
+        with torch.no_grad():
+            s = np.array([s], dtype=np.float32)
+#             s = feature_normalize(s)
+            action = self.actor(torch.tensor(s, dtype=torch.float))
+            action = action.data.numpy()[0]
+            sign = random.random()
+            action += self.is_trainning * self.act_noise * (1 if sign > 0.5 else -1) *\
+                      np.random.randn(self.actions_n)
+            action = np.clip(action, self.action_low, self.action_high)
+            action *= math.pi
+            writer.add_scalar('Action', action.item(), self.steps)
+            return action
 
     def load_weights(self, output):
         print('..............Model updated!..............')
